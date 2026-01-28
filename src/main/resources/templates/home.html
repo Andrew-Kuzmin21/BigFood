@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+  <link rel="stylesheet" th:href="@{/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+
+<div class="header">
+  <div class="header__cont">
+    <h1 class="header__cont__title">AutoService ShiftGear</h1>
+
+    <div class="header__cont__links">
+      <th:block th:if="${showAnonymousButton}">
+        <a class="header__cont__links__link link" href="/login">Sing in</a>
+        <a class="header__cont__links__link link" href="/registration">Sing up</a>
+      </th:block>
+    </div>
+
+    <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+      <a class="header__cont__links__link link" href="/logout">Log out</a>
+    </th:block>
+  </div>
+</div>
+
+
+<div class="main">
+
+  <th:block th:if="${(showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+    <a class="link main__link" href="/repair-orders">Repair Orders</a>
+  </th:block>
+
+  <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+    <a class="link main__link" href="/breakage-types">Services</a>
+  </th:block>
+
+  <th:block th:if="${(showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+    <a class="link main__link" href="/customers">Customers</a>
+    <a class="link main__link" href="/employees">Employees</a>
+    <a class="link main__link" href="/parts">Parts</a>
+    <a class="link main__link" href="/part-orders">Part Orders</a>
+  </th:block>
+</div>
+
+</body>
+</html>

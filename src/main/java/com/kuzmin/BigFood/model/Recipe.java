@@ -1,0 +1,50 @@
+package com.kuzmin.BigFood.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.experimental.Accessors;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Accessors(chain = true)
+@Data
+@Entity(name = "recipes")
+@Table(name = "recipes")
+public class Recipe {
+
+    @Id
+    @SequenceGenerator(name = "recipe_id_seq", sequenceName = "recipe_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recipe_id_seq")
+    private Long id;
+
+    @Column(name = "recipe_name", length = 100, nullable = false)
+    private String name;
+
+    @Column(name = "recipe_description", length = 700, nullable = false)
+    private String description;
+
+    @Column(name = "recipe_cooking_time")
+    private Integer cookingTime;
+
+    @Column(name = "recipe_serving")
+    private Integer serving;
+
+    @CreationTimestamp
+    @Column(name = "recipe_created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "recipe_updated_at")
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "national_cuisine_id")
+    private NationalCuisine nationalCuisine;
+
+    @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
+}

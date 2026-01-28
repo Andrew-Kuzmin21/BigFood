@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Sing in</title>
+  <link rel="stylesheet" th:href="@{/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/form.css}">
+</head>
+<body>
+
+<div class="header">
+  <div class="header__cont">
+    <h1 class="header__cont__title">BigFood</h1>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Введите код, отправленный на номер: <span th:text="${phoneNumber}"></span></h2>
+
+  <form th:action="@{/verify-phone}" method="post">
+    <input type="hidden" name="phoneNumber" th:value="${phoneNumber}" />
+
+    <label>Код из SMS</label>
+    <input type="text" name="code" required />
+
+    <button type="submit">Подтвердить</button>
+
+    <div th:if="${error}" th:text="${error}" class="error"></div>
+  </form>
+
+
+</div>
+
+</body>
+</html>

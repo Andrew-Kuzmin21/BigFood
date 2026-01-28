@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign up</title>
+
+  <link rel="stylesheet" th:href="@{/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/form.css}">
+
+  <style>
+    .switcher span {
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .switcher__active {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    #emailInput {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header__cont">
+    <h1 class="header__cont__title">BigFood</h1>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="switcher">
+    <span id="byPhone" class="switcher__active">Регистрация по телефону</span>
+    <span id="byEmail">Регистрация по почте</span>
+  </div>
+
+  <form th:action="@{/registration}" th:object="${form}" method="post">
+
+    <input type="text" th:field="*{user.username}" placeholder="Username" required>
+    <div th:errors="*{user.username}"></div>
+
+    <input type="email" th:field="*{user.email}" placeholder="Email" id="emailInput">
+    <div th:errors="*{user.email}"></div>
+    <div th:if="${emailError}" th:text="${emailError}" class="error"></div>
+
+    <input type="text" th:field="*{user.phoneNumber}" placeholder="Phone" id="phoneInput">
+    <div th:errors="*{user.phoneNumber}"></div>
+    <div th:if="${phoneError}" th:text="${phoneError}" class="error"></div>
+
+    <input type="password" th:field="*{user.password}" placeholder="Password" required>
+    <div th:errors="*{user.password}"></div>
+
+    <input type="password" th:field="*{confirmPassword}" placeholder="Confirm password" required>
+    <div th:errors="*{confirmPassword}"></div>
+
+    <div th:if="${globalError}" th:text="${globalError}" class="error"></div>
+
+    <button type="submit">Sign up</button>
+
+    <a class="main__prev" href="/login">Sign in</a>
+  </form>
+</div>
+
+<script>
+  const byEmail = document.getElementById('byEmail');
+  const byPhone = document.getElementById('byPhone');
+  const emailInput = document.getElementById('emailInput');
+  const phoneInput = document.getElementById('phoneInput');
+
+  function showPhone() {
+    phoneInput.style.display = 'block';
+    phoneInput.required = true;
+
+    emailInput.style.display = 'none';
+    emailInput.required = false;
+
+    byPhone.classList.add('switcher__active');
+    byEmail.classList.remove('switcher__active');
+  }
+
+  function showEmail() {
+    emailInput.style.display = 'block';
+    emailInput.required = true;
+
+    phoneInput.style.display = 'none';
+    phoneInput.required = false;
+
+    byEmail.classList.add('switcher__active');
+    byPhone.classList.remove('switcher__active');
+  }
+
+  byPhone.addEventListener('click', showPhone);
+  byEmail.addEventListener('click', showEmail);
+
+  // состояние по умолчанию
+  showPhone();
+</script>
+
+</body>
+</html>
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <title>Sing up</title>-->
+<!--  <link rel="stylesheet" th:href="@{/css/header.css}">-->
+<!--  <link rel="stylesheet" th:href="@{/css/main.css}">-->
+<!--  <link rel="stylesheet" th:href="@{/css/table.css}">-->
+<!--  <link rel="stylesheet" th:href="@{/css/form.css}">-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<div class="header">-->
+<!--  <div class="header__cont">-->
+<!--    <h1 class="header__cont__title">BigFood</h1>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--<div class="main">-->
+<!--  <form th:action="@{/registration}" th:object="${form}" method="post" class="registration-form">-->
+<!--    <input type="text" th:field="*{user.username}" placeholder="Username" required>-->
+<!--    <div th:errors="*{user.username}"></div>-->
+
+<!--    <input type="email" th:field="*{user.email}" placeholder="Email" id="emailInput">-->
+<!--    <div th:errors="*{user.email}"></div>-->
+
+<!--    <input type="text" th:field="*{user.phoneNumber}" placeholder="Phone" id="phoneInput">-->
+<!--    <div th:errors="*{user.phoneNumber}"></div>-->
+
+<!--    <input type="password" th:field="*{user.password}" placeholder="Password" required>-->
+<!--    <div th:errors="*{user.password}"></div>-->
+
+<!--    <input type="password" th:field="*{confirmPassword}" placeholder="Confirm Password" required>-->
+<!--    <div th:errors="*{confirmPassword}"></div>-->
+
+<!--    <button type="submit">Sign up</button>-->
+
+<!--    <div th:if="${error}" class="error">-->
+<!--      <p th:text="${error}"></p>-->
+<!--    </div>-->
+<!--  </form>-->
+
+<!--  <div class="switcher">-->
+<!--    <span id="byEmail" >Регистрация по почте</span> |-->
+<!--    <span id="byPhone" class="switcher__active">Регистрация по телефону</span>-->
+<!--  </div>-->
+
+<!--  <a class="main__prev" href="/login">Sing in</a>-->
+<!--  <a class="main__prev" href="/home">Home</a>-->
+
+<!--  <script>-->
+<!--    const byEmail = document.getElementById('byEmail');-->
+<!--    const byPhone = document.getElementById('byPhone');-->
+<!--    const emailInput = document.getElementById('emailInput');-->
+<!--    const phoneInput = document.getElementById('phoneInput');-->
+
+<!--    byEmail.addEventListener('click', () => {-->
+<!--      // показать email, скрыть телефон-->
+<!--      emailInput.style.display = 'block';-->
+<!--      emailInput.required = true;-->
+<!--      phoneInput.style.display = 'none';-->
+<!--      phoneInput.required = false;-->
+
+<!--      // переключение стиля активной надписи-->
+<!--      byEmail.classList.add('switcher__active');-->
+<!--      byPhone.classList.remove('switcher__active');-->
+<!--    });-->
+
+<!--    byPhone.addEventListener('click', () => {-->
+<!--      phoneInput.style.display = 'block';-->
+<!--      phoneInput.required = true;-->
+<!--      emailInput.style.display = 'none';-->
+<!--      emailInput.required = false;-->
+
+<!--      byPhone.classList.add('switcher__active');-->
+<!--      byEmail.classList.remove('switcher__active');-->
+<!--    });-->
+
+<!--    document.addEventListener('DOMContentLoaded', () => {-->
+<!--      phoneInput.style.display = 'block';-->
+<!--      phoneInput.required = true;-->
+<!--      emailInput.style.display = 'none';-->
+<!--      emailInput.required = false;-->
+
+<!--      byPhone.classList.add('switcher__active');-->
+<!--      byEmail.classList.remove('switcher__active');-->
+<!--    });-->
+<!--  </script>-->
+
+
+<!--</div>-->
+
+<!--</body>-->
+<!--</html>-->
