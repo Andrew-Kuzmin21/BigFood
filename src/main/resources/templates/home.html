@@ -12,16 +12,20 @@
 
 <div class="header">
   <div class="header__cont">
-    <h1 class="header__cont__title">AutoService ShiftGear</h1>
+    <h1 class="header__cont__title">BigFood</h1>
 
     <div class="header__cont__links">
       <th:block th:if="${showAnonymousButton}">
+        <a class="header__cont__links__link link" href="/recipes">Show Recipes</a>
+        <a class="header__cont__links__link link" th:href="@{/recipe/new}">Add Recipe</a>
         <a class="header__cont__links__link link" href="/login">Sing in</a>
         <a class="header__cont__links__link link" href="/registration">Sing up</a>
       </th:block>
     </div>
 
     <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+      <a class="header__cont__links__link link" href="/recipes">Show Recipes</a>
+      <a class="header__cont__links__link link" th:href="@{/recipes/new}">Add Recipe</a>
       <a class="header__cont__links__link link" href="/logout">Log out</a>
     </th:block>
   </div>
@@ -30,20 +34,43 @@
 
 <div class="main">
 
-  <th:block th:if="${(showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
-    <a class="link main__link" href="/repair-orders">Repair Orders</a>
-  </th:block>
+<!--  <h2 class="main_title">List of spare parts</h2>-->
+<!--  <table class="main__table">-->
+<!--    <tr><th>id</th><th>Name</th><th>Cost</th><th>Amount</th><th>Actions</th></tr>-->
+<!--    <tr th:each="part : ${partPage.content}">-->
+<!--      <td th:text="${part.id}"></td>-->
+<!--      <td th:text="${part.name}"></td>-->
+<!--      <td th:text="${part.cost}"></td>-->
+<!--      <td th:text="${part.amount}"></td>-->
+<!--      <td>-->
+<!--        <a class="main__buttons__button" th:href="@{/parts/edit/{id}(id=${part.id})}">Edit</a>-->
+<!--        <a class="main__buttons__button" th:href="@{/parts/delete/{id}(id=${part.id})}" onclick="return confirm('Delete?');">Delete</a>-->
+<!--      </td>-->
+<!--    </tr>-->
+<!--  </table>-->
 
-  <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
-    <a class="link main__link" href="/breakage-types">Services</a>
-  </th:block>
+<!--  <div class="main__buttons">-->
+<!--    <a class="main__buttons__button" th:if="${currentPage > 0}" th:href="@{/parts(page=${currentPage - 1})}">Previous</a>-->
+<!--    <span th:text="${currentPage + 1}"></span>-->
+<!--    <a class="main__buttons__button" th:if="${partPage.hasNext()}" th:href="@{/parts(page=${currentPage + 1})}">Next</a>-->
+<!--  </div>-->
 
-  <th:block th:if="${(showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
-    <a class="link main__link" href="/customers">Customers</a>
-    <a class="link main__link" href="/employees">Employees</a>
-    <a class="link main__link" href="/parts">Parts</a>
-    <a class="link main__link" href="/part-orders">Part Orders</a>
-  </th:block>
+
+
+<!--  <th:block th:if="${(showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">-->
+<!--    <a class="link main__link" href="/repair-orders">Repair Orders</a>-->
+<!--  </th:block>-->
+
+<!--  <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">-->
+<!--    <a class="link main__link" href="/breakage-types">Services</a>-->
+<!--  </th:block>-->
+
+<!--  <th:block th:if="${(showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">-->
+<!--    <a class="link main__link" href="/customers">Customers</a>-->
+<!--    <a class="link main__link" href="/employees">Employees</a>-->
+<!--    <a class="link main__link" href="/parts">Parts</a>-->
+<!--    <a class="link main__link" href="/part-orders">Part Orders</a>-->
+<!--  </th:block>-->
 </div>
 
 </body>

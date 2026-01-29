@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Форма рецепта</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<h1 th:text="${recipe.id} == null ? 'Создать рецепт' : 'Редактировать рецепт'"></h1>
+
+<form th:action="@{/recipes}" th:object="${recipe}" method="post">
+  <input type="hidden" th:if="${recipe.id != null}" th:field="*{id}" />
+
+  <label for="title">Название:</label>
+  <input type="text" id="title" th:field="*{name}" required />
+  <br/>
+
+  <label for="description">Описание:</label>
+  <textarea id="description" th:field="*{description}" rows="5"></textarea>
+  <br/>
+
+  <label for="cookingTime">Cooking Time:</label>
+  <input type="number" id="cookingTime" th:field="*{cookingTime}"  />
+  <br/>
+
+  <label for="serving">Serving:</label>
+  <input type="number" id="serving" th:field="*{serving}"  />
+  <br/>
+
+  <label for="nationalCuisine">Национальная кухня:</label>
+  <select id="nationalCuisine" th:field="*{nationalCuisine.id}">
+    <option value="" disabled th:selected="*{nationalCuisine == null}">-- Выберите кухню --</option>
+    <option th:each="natCuis : ${nationalCuisines}"
+            th:value="${natCuis.id}"
+            th:text="${natCuis.name}">
+    </option>
+  </select>
+  <br/>
+
+  <button type="submit">Сохранить</button>
+</form>
+
+<a th:href="@{/recipes}">Назад к списку рецептов</a>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recipes</title>
+
+  <link rel="stylesheet" th:href="@{/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/form.css}">
+</head>
+<body>
+
+<div class="header">
+  <div class="header__cont">
+    <h1 class="header__cont__title">BigFood</h1>
+
+    <div class="header__cont__links">
+      <a class="header__cont__links__link link" href="/home">Back</a>
+      <a class="header__cont__links__link link" href="/logout">Log out</a>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <h2 class="main_title">List recipes</h2>
+
+  <table class="main__table">
+    <tr><th>id</th><th>Name</th><th>Description</th><th>Cooking time</th><th>Serving</th><th>Created</th><th>Updated</th><th>National</th><th>Author</th></tr>
+    <tr th:each="recipe : ${recipePage.content}">
+      <td th:text="${recipe.id}"></td>
+      <td th:text="${recipe.name}"></td>
+      <td th:text="${recipe.description}"></td>
+      <td th:text="${recipe.cookingTime}"></td>
+      <td th:text="${recipe.serving}"></td>
+      <td th:text="${recipe.createdAt}"></td>
+      <td th:text="${recipe.updatedAt}"></td>
+      <td th:text="${recipe.nationalCuisine.name}"></td>
+      <td th:text="${recipe.author != null ? recipe.author.username : '—'}"></td>
+      <td>
+        <a class="main__buttons__button" th:href="@{/recipes/{id}/edit(id=${recipe.id})}">Edit</a>
+        <form th:action="@{/recipes/{id}/delete(id=${recipe.id})}" method="post" onsubmit="return confirm('Delete?');" style="display:inline">
+          <button type="submit" class="main__buttons__button">Delete</button>
+        </form>
+      </td>
+    </tr>
+  </table>
+
+  <div class="main__buttons">
+    <a class="main__buttons__button" th:if="${currentPage > 0}" th:href="@{/recipes(page=${currentPage - 1})}">Previous</a>
+    <span th:text="${currentPage + 1}"></span>
+    <a class="main__buttons__button" th:if="${recipePage.hasNext()}" th:href="@{/recipes(page=${currentPage + 1})}">Next</a>
+  </div>
+  <a class="main__buttons__button" th:href="@{/recipes/new}">Add Recipe</a>
+  <a class="main__prev" th:href="@{/home}">Back</a>
+</div>
+
+</body>
+</html>

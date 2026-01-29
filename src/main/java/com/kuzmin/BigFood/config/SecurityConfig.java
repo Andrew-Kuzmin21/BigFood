@@ -19,7 +19,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**");
+        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**");
     }
 
     @Bean
@@ -33,14 +33,14 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests((request) -> request
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/home","/error","/login","/registration", "/registrationEmpl").permitAll()
+                        .requestMatchers("/home","/error","/login","/registration", "/recipes", "/registrationEmpl").permitAll()
                         .requestMatchers(
-                                "/part_order/**",
-                                "/customers",
-                                "/employees",
-                                "/position",
-                                "/parts/**",
-                                "/part-orders/**"
+                                "/recipe_form",
+                                "/recipes/new",
+                                "/recipes/edit",
+                                "/recipes/{id}/edit",
+                                "/recipes/delete",
+                                "/recipes/{id}/delete"
                         )
                         .hasAnyAuthority("ROLE_Admin", "ROLE_User")
 
@@ -52,8 +52,6 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .usernameParameter("login")
-                        .passwordParameter("password")
                         .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
