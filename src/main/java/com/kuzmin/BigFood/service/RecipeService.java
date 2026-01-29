@@ -39,7 +39,7 @@ public class RecipeService {
     }
 
     /**
-     * Сохранить рецепт
+     * Сохранить рецепт (create / update)
      */
     public void save(Recipe recipe) {
         if (recipe.getId() == null) {
