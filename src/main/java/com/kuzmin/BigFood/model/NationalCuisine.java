@@ -16,6 +16,6 @@ public class NationalCuisine {
     private Long id;
 
     @Column(name = "national_cuisine_name", nullable = false)
-    private String nationalCuisineName;
+    private String name;
 
 }
