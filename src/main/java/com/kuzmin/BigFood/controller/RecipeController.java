@@ -41,7 +41,6 @@ public class RecipeController {
                 authentication != null &&
                         authentication.getPrincipal() instanceof UserDetails;
 
-
         if (isAuthenticated) {
             var authorities = authentication.getAuthorities();
             model.addAttribute("showCustomerButtons", authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_User")));
@@ -55,6 +54,7 @@ public class RecipeController {
         Page<Recipe> recipePage = recipeService.getPage(page, 10);
         model.addAttribute("recipePage", recipePage);
         model.addAttribute("currentPage", page);
+        model.addAttribute("recipeService", recipeService);
         return "recipes";
     }
 

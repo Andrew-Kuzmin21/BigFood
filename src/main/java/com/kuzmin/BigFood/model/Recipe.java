@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Accessors(chain = true)
 @Data
@@ -47,12 +48,7 @@ public class Recipe {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-//    @OneToMany(
-//            mappedBy = "recipe",
-//            cascade = CascadeType.ALL,
-//            orphanRemoval = true
-//    )
-//    private Set<RecipeDishTypes> dishTypes = new HashSet<>();
-
+    @OneToMany(mappedBy = "recipe", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<RecipeDishType> dishTypes;
 
 }

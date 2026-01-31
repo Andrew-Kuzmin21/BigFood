@@ -15,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -93,6 +95,29 @@ public class RecipeService {
                 .map(rdt -> rdt.getDishType().getId())
                 .toList();
     }
+
+    public String getDishTypePath(Recipe recipe) {
+        if (recipe.getDishTypes() == null || recipe.getDishTypes().isEmpty()) {
+            return "—";
+        }
+
+        // Берем тип (последний в цепочке)
+        DishType leaf = recipe.getDishTypes().get(
+                recipe.getDishTypes().size() - 1
+        ).getDishType();
+
+        List<String> names = new ArrayList<>();
+
+        while (leaf != null) {
+            names.add(leaf.getName());
+            leaf = leaf.getParent();
+        }
+
+        Collections.reverse(names);
+
+        return String.join(", ", names);
+    }
+
 
     /** * Получить id пользователя */
     private User getCurrentUser(Authentication authentication) {
