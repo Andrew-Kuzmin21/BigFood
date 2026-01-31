@@ -37,9 +37,24 @@
   </select>
   <br/>
 
+  <label>Тип блюда:</label>
+<!--  <div id="dishTypeContainer"></div>-->
+
+  <div th:each="type : ${dishTypes}">
+    <label>
+      <input type="checkbox"
+             name="dishTypeIds"
+             th:value="${type.id}"
+             th:checked="${selectedDishTypeIds != null and selectedDishTypeIds.contains(type.id)}"/>
+      <span th:text="${type.name}"></span>
+    </label>
+  </div>
+
   <button type="submit">Сохранить</button>
 </form>
 
 <a th:href="@{/recipes}">Назад к списку рецептов</a>
+
 </body>
 </html>
+

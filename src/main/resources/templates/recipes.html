@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Recipes</title>
-
   <link rel="stylesheet" th:href="@{/css/header.css}">
   <link rel="stylesheet" th:href="@{/css/main.css}">
   <link rel="stylesheet" th:href="@{/css/form.css}">
@@ -15,9 +14,17 @@
     <h1 class="header__cont__title">BigFood</h1>
 
     <div class="header__cont__links">
-      <a class="header__cont__links__link link" href="/home">Back</a>
-      <a class="header__cont__links__link link" href="/logout">Log out</a>
+      <th:block th:if="${showAnonymousButton}">
+        <a class="header__cont__links__link link" th:href="@{/recipe/new}">Add Recipe</a>
+        <a class="header__cont__links__link link" href="/login">Sing in</a>
+        <a class="header__cont__links__link link" href="/registration">Sing up</a>
+      </th:block>
     </div>
+
+    <th:block th:if="${(showCustomerButtons ?: false) or (showMechanicButtons ?: false) or (showPartsManagerButtons ?: false) or (showAdminButtons ?: false)}">
+      <a class="header__cont__links__link link" th:href="@{/recipes/new}">Add Recipe</a>
+      <a class="header__cont__links__link link" href="/logout">Log out</a>
+    </th:block>
   </div>
 </div>
 

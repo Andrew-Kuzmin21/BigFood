@@ -47,4 +47,12 @@ public class Recipe {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+//    @OneToMany(
+//            mappedBy = "recipe",
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true
+//    )
+//    private Set<RecipeDishTypes> dishTypes = new HashSet<>();
+
+
 }
