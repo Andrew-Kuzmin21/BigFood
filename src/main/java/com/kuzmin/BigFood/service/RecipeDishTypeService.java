@@ -18,9 +18,6 @@ public class RecipeDishTypeService {
     /**
      * Типы блюда
      */
-//    public RecipeDishType getDishTypeIdsByRecipe(Long recipeId) {
-//        return recipeDishTypeRepository.findById(recipeId).orElse(null);
-//    }
     public List<Long> getDishTypeIdsByRecipe(Long recipeId) {
         return recipeDishTypeRepository.findByRecipeId(recipeId)
                 .stream()

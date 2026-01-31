@@ -57,11 +57,9 @@ public class RecipeService {
 
         // 1. Автор (CREATE / UPDATE)
         if (recipe.getId() == null) {
-            // CREATE
             User currentUser = getCurrentUser(authentication);
             recipe.setAuthor(currentUser);
         } else {
-            // UPDATE — сохраняем старого автора
             Recipe existingRecipe = recipeRepository.findById(recipe.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Recipe not found"));
 
@@ -71,22 +69,23 @@ public class RecipeService {
         // 2. Сохраняем рецепт
         Recipe savedRecipe = recipeRepository.save(recipe);
 
-        // 3. Обновляем типы блюда (через таблицу-связку)
+        // 3. Удаляем старую ветку типов блюда
         recipeDishTypeRepository.deleteByRecipe(savedRecipe);
 
+        // 4. Сохраняем ВСЮ цепочку (корень → лист)
         if (dishTypeIds != null && !dishTypeIds.isEmpty()) {
             for (Long typeId : dishTypeIds) {
-                DishType type = dishTypeRepository.findById(typeId)
-                        .orElseThrow(() -> new IllegalArgumentException("DishType not found: " + typeId));
-
                 RecipeDishType link = new RecipeDishType()
                         .setRecipe(savedRecipe)
-                        .setDishType(type);
+                        .setDishType(
+                                dishTypeRepository.getReferenceById(typeId)
+                        );
 
                 recipeDishTypeRepository.save(link);
             }
         }
     }
+
 
     public List<Long> getDishTypeIdsByRecipe(Long recipeId) {
         return recipeDishTypeRepository.findByRecipeId(recipeId)

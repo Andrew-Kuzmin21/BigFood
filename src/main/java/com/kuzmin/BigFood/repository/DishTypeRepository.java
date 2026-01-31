@@ -15,4 +15,5 @@ public interface DishTypeRepository extends CrudRepository<DishType, Long> {
     List<DishType> findByParentIsNull();
     List<DishType> findByParentId(Long parentId);
 
+    DishType getReferenceById(Long typeId);
 }

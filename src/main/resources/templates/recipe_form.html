@@ -38,22 +38,80 @@
   <br/>
 
   <label>Тип блюда:</label>
-<!--  <div id="dishTypeContainer"></div>-->
+  <div id="dish-type-group" class="dish-type-group"></div>
 
-  <div th:each="type : ${dishTypes}">
-    <label>
-      <input type="checkbox"
-             name="dishTypeIds"
-             th:value="${type.id}"
-             th:checked="${selectedDishTypeIds != null and selectedDishTypeIds.contains(type.id)}"/>
-      <span th:text="${type.name}"></span>
-    </label>
-  </div>
+<!--  <div id="dish-type-groups"></div>-->
+
+<!--  <button type="button" onclick="addDishTypeGroup()">-->
+<!--    + Добавить тип блюда-->
+<!--  </button>-->
+
+  <script>
+    document.querySelector("form").addEventListener("submit", function () {
+      const group = document.querySelector(".dish-type-group");
+      const selects = group.querySelectorAll("select");
+
+      selects.forEach(select => {
+        if (select.value) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "dishTypeIds";
+          input.value = select.value;
+          this.appendChild(input);
+        }
+      });
+    });
+  </script>
+
+
 
   <button type="submit">Сохранить</button>
 </form>
 
 <a th:href="@{/recipes}">Назад к списку рецептов</a>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    loadSelect(document.getElementById('dish-type-group'), null);
+  });
+
+  function loadSelect(group, parentId) {
+    const url = parentId
+            ? `/api/dish-types/${parentId}/children`
+            : `/api/dish-types/roots`;
+
+    fetch(url)
+            .then(r => r.json())
+            .then(types => {
+              if (types.length === 0) return;
+
+              const select = document.createElement('select');
+              select.innerHTML = `<option value="">-- Выберите --</option>`;
+
+              types.forEach(t => {
+                const option = document.createElement('option');
+                option.value = t.id;
+                option.textContent = t.name;
+                select.appendChild(option);
+              });
+
+              select.onchange = () => {
+                // удалить все селекты ниже
+                while (select.nextSibling) {
+                  select.nextSibling.remove();
+                }
+
+                if (select.value) {
+                  loadSelect(group, select.value);
+                }
+              };
+
+              group.appendChild(select);
+            });
+  }
+</script>
+
+
 
 </body>
 </html>

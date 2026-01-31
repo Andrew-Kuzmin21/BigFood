@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/recipes/{id}/edit",
                                 "/recipes/delete",
                                 "/recipes/{id}/delete",
-                                "/dish-types/**"
+                                "/dish-types/**",
+                                "/api/dish-types/**"
                         )
                         .hasAnyAuthority("ROLE_Admin", "ROLE_User")
 
