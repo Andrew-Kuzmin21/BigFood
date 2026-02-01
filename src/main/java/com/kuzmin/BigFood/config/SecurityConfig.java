@@ -54,10 +54,14 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
+                        .usernameParameter("login")
+                        .passwordParameter("password")
                         .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 )

@@ -1,11 +1,13 @@
 package com.kuzmin.BigFood.controller;
 import com.kuzmin.BigFood.model.Recipe;
+import com.kuzmin.BigFood.model.User;
 import com.kuzmin.BigFood.service.DishTypeService;
 import com.kuzmin.BigFood.service.NationalCuisineService;
 import com.kuzmin.BigFood.service.RecipeDishTypeService;
 import com.kuzmin.BigFood.service.RecipeService;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -82,8 +84,8 @@ public class RecipeController {
 
     /** * Сохранение рецепта */
     @PostMapping
-    public String saveRecipe(@ModelAttribute Recipe recipe, @RequestParam(required = false)List<Long> dishTypeIds, Authentication authentication) {
-        recipeService.save(recipe, dishTypeIds, authentication);
+    public String saveRecipe(@ModelAttribute Recipe recipe, @RequestParam(required = false)List<Long> dishTypeIds, @AuthenticationPrincipal User currentUser) {
+        recipeService.save(recipe, dishTypeIds, currentUser);
         return "redirect:/recipes";
     }
 

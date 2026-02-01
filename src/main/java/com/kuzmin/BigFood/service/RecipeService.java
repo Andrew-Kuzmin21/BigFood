@@ -54,12 +54,12 @@ public class RecipeService {
     public void save(
             Recipe recipe,
             List<Long> dishTypeIds,
-            Authentication authentication
+            User currentUser
     ) {
 
         // 1. Автор (CREATE / UPDATE)
         if (recipe.getId() == null) {
-            User currentUser = getCurrentUser(authentication);
+//            User currentUser = getCurrentUser(authentication);
             recipe.setAuthor(currentUser);
         } else {
             Recipe existingRecipe = recipeRepository.findById(recipe.getId())
@@ -75,17 +75,26 @@ public class RecipeService {
         recipeDishTypeRepository.deleteByRecipe(savedRecipe);
 
         // 4. Сохраняем ВСЮ цепочку (корень → лист)
-        if (dishTypeIds != null && !dishTypeIds.isEmpty()) {
-            for (Long typeId : dishTypeIds) {
-                RecipeDishType link = new RecipeDishType()
-                        .setRecipe(savedRecipe)
-                        .setDishType(
-                                dishTypeRepository.getReferenceById(typeId)
-                        );
-
-                recipeDishTypeRepository.save(link);
+        if (dishTypeIds != null) {
+            for (Long id : dishTypeIds) {
+                recipeDishTypeRepository.save(
+                        new RecipeDishType()
+                                .setRecipe(savedRecipe)
+                                .setDishType(dishTypeRepository.getReferenceById(id))
+                );
             }
         }
+//        if (dishTypeIds != null && !dishTypeIds.isEmpty()) {
+//            for (Long typeId : dishTypeIds) {
+//                RecipeDishType link = new RecipeDishType()
+//                        .setRecipe(savedRecipe)
+//                        .setDishType(
+//                                dishTypeRepository.getReferenceById(typeId)
+//                        );
+//
+//                recipeDishTypeRepository.save(link);
+//            }
+//        }
     }
 
 
@@ -121,15 +130,30 @@ public class RecipeService {
 
     /** * Получить id пользователя */
     private User getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User is not authenticated");
+        }
+
         Object principal = authentication.getPrincipal();
 
-        String username = (principal instanceof UserDetails)
-                ? ((UserDetails) principal).getUsername()
-                : principal.toString();
+        if (principal instanceof User user) {
+            return user;
+        }
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        throw new RuntimeException("Principal is not User");
     }
+
+//
+//    private User getCurrentUser(Authentication authentication) {
+//        Object principal = authentication.getPrincipal();
+//
+//        String username = (principal instanceof UserDetails)
+//                ? ((UserDetails) principal).getUsername()
+//                : principal.toString();
+//
+//        return userRepository.findByUsername(username)
+//                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+//    }
 
     /** * Удалить рецепт */
     @Transactional

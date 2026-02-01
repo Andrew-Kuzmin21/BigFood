@@ -35,7 +35,6 @@ public class User implements UserDetails {
     @Column(name = "user_username", length = 50, nullable = false, unique = true)
     private String username;
 
-//    @NotBlank(message = "Email обязателен")
     @Email(message = "Некорректный email")
     @Column(name = "user_email", length = 50, unique = true)
     private String email;
@@ -104,7 +103,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
-
 
 }
