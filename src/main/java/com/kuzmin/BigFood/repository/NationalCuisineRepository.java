@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface NationalCuisineRepository extends CrudRepository<NationalCuisine, Long> {
     List<NationalCuisine> findAll();
+
+    NationalCuisine getReferenceById(Long nationalCuisineId);
 }

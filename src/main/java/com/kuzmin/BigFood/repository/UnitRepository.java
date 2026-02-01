@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface UnitRepository extends CrudRepository<Unit, Long> {
     List<Unit> findAll();
+
+    Unit getReferenceById(Long unitId);
 }

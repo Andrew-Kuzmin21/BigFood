@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Форма рецепта</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<h1 th:text="${form.id} == null ? 'Создать рецепт' : 'Редактировать рецепт'"></h1>
+
+<form th:action="@{/recipes}" th:object="${form}" method="post">
+  <input type="hidden" th:if="${form.id != null}" th:field="*{id}" />
+
+  <label for="title">Название:</label>
+  <input type="text" id="title" th:field="*{name}" required />
+  <br/>
+
+  <label for="description">Описание:</label>
+  <textarea id="description" th:field="*{description}" rows="5"></textarea>
+  <br/>
+
+  <label for="cookingTime">Cooking Time:</label>
+  <input type="number" id="cookingTime" th:field="*{cookingTime}"  />
+  <br/>
+
+  <label for="serving">Serving:</label>
+  <input type="number" id="serving" th:field="*{serving}"  />
+  <br/>
+
+  <label for="nationalCuisine">Национальная кухня:</label>
+  <select id="nationalCuisine" th:field="*{nationalCuisineId}">
+    <option value="" disabled th:selected="*{nationalCuisineId == null}">-- Выберите кухню --</option>
+    <option th:each="natCuis : ${nationalCuisines}"
+            th:value="${natCuis.id}"
+            th:text="${natCuis.name}">
+    </option>
+  </select>
+  <br/>
+
+  <label>Тип блюда:</label>
+  <div id="dish-type-group" class="dish-type-group"></div>
+  <script>
+    document.querySelector("form").addEventListener("submit", function () {
+      const group = document.querySelector(".dish-type-group");
+      const selects = group.querySelectorAll("select");
+
+      selects.forEach(select => {
+        if (select.value) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "dishTypeIds";
+          input.value = select.value;
+          this.appendChild(input);
+        }
+      });
+    });
+  </script>
+
+
+  <label>Ингредиенты:</label>
+  <table class="main__ingtable">
+    <thead>
+    <tr>
+      <th>Ингредиент</th>
+      <th>Количество</th>
+      <th>Ед.</th>
+      <th></th>
+    </tr>
+    </thead>
+
+    <tbody id="ingredients-body">
+    <tr th:each="ing, i : *{ingredients}">
+      <td>
+        <select th:field="*{ingredients[__${i.index}__].ingredientId}">
+          <option value="">--</option>
+          <option th:each="ingr : ${ingredientsList}"
+                  th:value="${ingr.id}"
+                  th:text="${ingr.name}">
+          </option>
+        </select>
+      </td>
+
+      <td>
+        <input type="number" step="0.01"
+               th:field="*{ingredients[__${i.index}__].amount}">
+      </td>
+
+      <td>
+        <select th:field="*{ingredients[__${i.index}__].unitId}">
+          <option th:each="u : ${units}"
+                  th:value="${u.id}"
+                  th:text="${u.name}">
+          </option>
+        </select>
+      </td>
+
+      <td>
+        <button type="button" onclick="removeRow(this)">✖</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <button type="button" onclick="addRow()">Добавить ингредиент</button>
+
+<!--  Добавление новой строки ингредиента-->
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const ingredientsList = [[${ingredientsList}]];
+    const unitsList = [[${units}]];
+    let index = [[${form.ingredients.size()}]];
+
+    function buildIngredientOptions() {
+      let html = '<option value="">--</option>';
+      ingredientsList.forEach(i => {
+        html += `<option value="${i.id}">${i.name}</option>`;
+      });
+      return html;
+    }
+
+    function buildUnitOptions() {
+      let html = '';
+      unitsList.forEach(u => {
+        html += `<option value="${u.id}">${u.name}</option>`;
+      });
+      return html;
+    }
+
+    function addRow() {
+      const tbody = document.getElementById("ingredients-body");
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+      <td>
+        <select name="ingredients[${index}].ingredientId">
+          ${buildIngredientOptions()}
+        </select>
+      </td>
+      <td>
+        <input type="number" step="0.01"
+               name="ingredients[${index}].amount">
+      </td>
+      <td>
+        <select name="ingredients[${index}].unitId">
+          ${buildUnitOptions()}
+        </select>
+      </td>
+      <td>
+        <button type="button" onclick="removeRow(this)">✖</button>
+      </td>
+    `;
+
+      tbody.appendChild(row);
+      index++;
+    }
+
+    function removeRow(btn) {
+      btn.closest("tr").remove();
+    }
+    /*]]>*/
+  </script>
+
+  <button type="submit">Сохранить</button>
+</form>
+
+<a th:href="@{/recipes}">Назад к списку рецептов</a>
+
+<!--Скрипт для типов блюд-->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    loadSelect(document.getElementById('dish-type-group'), null);
+  });
+
+  function loadSelect(group, parentId) {
+    const url = parentId
+            ? `/api/dish-types/${parentId}/children`
+            : `/api/dish-types/roots`;
+
+    fetch(url)
+            .then(r => r.json())
+            .then(types => {
+              if (types.length === 0) return;
+
+              const select = document.createElement('select');
+              select.innerHTML = `<option value="">-- Выберите --</option>`;
+
+              types.forEach(t => {
+                const option = document.createElement('option');
+                option.value = t.id;
+                option.textContent = t.name;
+                select.appendChild(option);
+              });
+
+              select.onchange = () => {
+                // удалить все селекты ниже
+                while (select.nextSibling) {
+                  select.nextSibling.remove();
+                }
+
+                if (select.value) {
+                  loadSelect(group, select.value);
+                }
+              };
+
+              group.appendChild(select);
+            });
+  }
+</script>
+
+</body>
+</html>
+

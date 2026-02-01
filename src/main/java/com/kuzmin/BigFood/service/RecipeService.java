@@ -1,18 +1,13 @@
 package com.kuzmin.BigFood.service;
 
-import com.kuzmin.BigFood.model.DishType;
-import com.kuzmin.BigFood.model.Recipe;
-import com.kuzmin.BigFood.model.RecipeDishType;
-import com.kuzmin.BigFood.model.User;
-import com.kuzmin.BigFood.repository.DishTypeRepository;
-import com.kuzmin.BigFood.repository.RecipeDishTypeRepository;
-import com.kuzmin.BigFood.repository.RecipeRepository;
-import com.kuzmin.BigFood.repository.UserRepository;
+import com.kuzmin.BigFood.dto.RecipeFormDto;
+import com.kuzmin.BigFood.dto.RecipeIngredientDto;
+import com.kuzmin.BigFood.model.*;
+import com.kuzmin.BigFood.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,19 +18,28 @@ import java.util.List;
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
-    private final UserRepository userRepository;
     private final RecipeDishTypeRepository recipeDishTypeRepository;
     private final DishTypeRepository dishTypeRepository;
+    private final NationalCuisineRepository nationalCuisineRepository;
+    private final UnitRepository unitRepository;
+    private final IngredientRepository ingredientRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
 
     public RecipeService(
             RecipeRepository recipeRepository,
-            UserRepository userRepository,
             RecipeDishTypeRepository recipeDishTypeRepository,
-            DishTypeRepository dishTypeRepository) {
+            DishTypeRepository dishTypeRepository,
+            NationalCuisineRepository nationalCuisineRepository,
+            UnitRepository unitRepository,
+            IngredientRepository ingredientRepository,
+            RecipeIngredientRepository recipeIngredientRepository) {
         this.recipeRepository = recipeRepository;
-        this.userRepository = userRepository;
         this.recipeDishTypeRepository = recipeDishTypeRepository;
         this.dishTypeRepository = dishTypeRepository;
+        this.nationalCuisineRepository = nationalCuisineRepository;
+        this.unitRepository = unitRepository;
+        this.ingredientRepository = ingredientRepository;
+        this.recipeIngredientRepository = recipeIngredientRepository;
     }
 
     /** * Получение рецептов с пагинацией */
@@ -51,32 +55,37 @@ public class RecipeService {
 
     /** * Сохранить рецепт (create / update) */
     @Transactional
-    public void save(
-            Recipe recipe,
-            List<Long> dishTypeIds,
-            User currentUser
-    ) {
+    public void save(RecipeFormDto form, User currentUser) {
 
-        // 1. Автор (CREATE / UPDATE)
-        if (recipe.getId() == null) {
-//            User currentUser = getCurrentUser(authentication);
+        // ===== 1. Recipe (create / update) =====
+        Recipe recipe;
+
+        if (form.getId() == null) {
+            recipe = new Recipe();
             recipe.setAuthor(currentUser);
         } else {
-            Recipe existingRecipe = recipeRepository.findById(recipe.getId())
+            recipe = recipeRepository.findById(form.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Recipe not found"));
-
-            recipe.setAuthor(existingRecipe.getAuthor());
         }
 
-        // 2. Сохраняем рецепт
+        recipe.setName(form.getName());
+        recipe.setDescription(form.getDescription());
+        recipe.setCookingTime(form.getCookingTime());
+        recipe.setServing(form.getServing());
+
+        if (form.getNationalCuisineId() != null) {
+            recipe.setNationalCuisine(
+                    nationalCuisineRepository.getReferenceById(form.getNationalCuisineId())
+            );
+        }
+
         Recipe savedRecipe = recipeRepository.save(recipe);
 
-        // 3. Удаляем старую ветку типов блюда
+        // ===== 2. Dish types =====
         recipeDishTypeRepository.deleteByRecipe(savedRecipe);
 
-        // 4. Сохраняем ВСЮ цепочку (корень → лист)
-        if (dishTypeIds != null) {
-            for (Long id : dishTypeIds) {
+        if (form.getDishTypeIds() != null) {
+            for (Long id : form.getDishTypeIds()) {
                 recipeDishTypeRepository.save(
                         new RecipeDishType()
                                 .setRecipe(savedRecipe)
@@ -84,19 +93,25 @@ public class RecipeService {
                 );
             }
         }
-//        if (dishTypeIds != null && !dishTypeIds.isEmpty()) {
-//            for (Long typeId : dishTypeIds) {
-//                RecipeDishType link = new RecipeDishType()
-//                        .setRecipe(savedRecipe)
-//                        .setDishType(
-//                                dishTypeRepository.getReferenceById(typeId)
-//                        );
-//
-//                recipeDishTypeRepository.save(link);
-//            }
-//        }
-    }
 
+        // ===== 3. Ingredients =====
+        recipeIngredientRepository.deleteByRecipe(savedRecipe);
+        savedRecipe.getIngredients().clear();
+
+        if (form.getIngredients() != null) {
+            for (RecipeIngredientDto dto : form.getIngredients()) {
+                if (dto.getIngredientId() == null) continue;
+
+                RecipeIngredients ri = new RecipeIngredients()
+                        .setRecipe(savedRecipe)
+                        .setIngredient(ingredientRepository.getReferenceById(dto.getIngredientId()))
+                        .setUnit(unitRepository.getReferenceById(dto.getUnitId()))
+                        .setAmount(dto.getAmount());
+
+                recipeIngredientRepository.save(ri);
+            }
+        }
+    }
 
     public List<Long> getDishTypeIdsByRecipe(Long recipeId) {
         return recipeDishTypeRepository.findByRecipeId(recipeId)
@@ -126,34 +141,6 @@ public class RecipeService {
 
         return String.join(", ", names);
     }
-
-
-    /** * Получить id пользователя */
-    private User getCurrentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User is not authenticated");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof User user) {
-            return user;
-        }
-
-        throw new RuntimeException("Principal is not User");
-    }
-
-//
-//    private User getCurrentUser(Authentication authentication) {
-//        Object principal = authentication.getPrincipal();
-//
-//        String username = (principal instanceof UserDetails)
-//                ? ((UserDetails) principal).getUsername()
-//                : principal.toString();
-//
-//        return userRepository.findByUsername(username)
-//                .orElseThrow(() -> new RuntimeException("User not found: " + username));
-//    }
 
     /** * Удалить рецепт */
     @Transactional

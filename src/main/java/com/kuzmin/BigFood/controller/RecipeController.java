@@ -1,10 +1,10 @@
 package com.kuzmin.BigFood.controller;
+import com.kuzmin.BigFood.dto.RecipeFormDto;
+import com.kuzmin.BigFood.dto.RecipeIngredientDto;
+import com.kuzmin.BigFood.mapper.RecipeMapper;
 import com.kuzmin.BigFood.model.Recipe;
 import com.kuzmin.BigFood.model.User;
-import com.kuzmin.BigFood.service.DishTypeService;
-import com.kuzmin.BigFood.service.NationalCuisineService;
-import com.kuzmin.BigFood.service.RecipeDishTypeService;
-import com.kuzmin.BigFood.service.RecipeService;
+import com.kuzmin.BigFood.service.*;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /** * Контроллер для работы с рецептами. */
 @Controller
@@ -22,23 +22,25 @@ public class RecipeController {
 
     private final RecipeService recipeService;
     private final NationalCuisineService nationalCuisineService;
-    private final RecipeDishTypeService recipeDishTypeService;
     private final DishTypeService dishTypeService;
+    private final IngredientService ingredientService;
+    private final UnitService unitService;
     public RecipeController(
             RecipeService recipeService,
             NationalCuisineService nationalCuisineService,
-            RecipeDishTypeService recipeDishTypeService,
-            DishTypeService dishTypeService) {
+            DishTypeService dishTypeService,
+            IngredientService ingredientService,
+            UnitService unitService) {
         this.recipeService = recipeService;
         this.nationalCuisineService = nationalCuisineService;
-        this.recipeDishTypeService = recipeDishTypeService;
         this.dishTypeService = dishTypeService;
+        this.ingredientService = ingredientService;
+        this.unitService = unitService;
     }
 
     /** * Страница Рецептов */
     @GetMapping
     public String listRecipes( Model model, Authentication authentication, @RequestParam(defaultValue = "0") int page ) {
-//        boolean isAuthenticated = authentication != null && authentication.isAuthenticated();
         boolean isAuthenticated =
                 authentication != null &&
                         authentication.getPrincipal() instanceof UserDetails;
@@ -63,29 +65,47 @@ public class RecipeController {
     /** * Форма создания рецепта */
     @GetMapping("/new")
     public String showAddForm(Model model) {
-        model.addAttribute("recipe", new Recipe());
+        RecipeFormDto form = new RecipeFormDto();
+        if (form.getIngredients() == null) {
+            form.setIngredients(new ArrayList<>());
+        }
+
+        // 3 пустые строки ингредиентов по умолчанию
+        for (int i = 0; i < 3; i++) {
+            form.getIngredients().add(new RecipeIngredientDto());
+        }
+
+        model.addAttribute("form", form);
         model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
-        // model.addAttribute("dishTypes", recipeDishTypeService.getAll());
-         model.addAttribute("dishTypes", dishTypeService.getAll());
-         return "recipe_form";
+        model.addAttribute("dishTypes", dishTypeService.getAll());
+        model.addAttribute("ingredientsList", ingredientService.getAllIngredients());
+        model.addAttribute("units", unitService.getAll());
+
+        return "recipe-form";
     }
 
     /** * Форма редактирования рецепта */
     @GetMapping("/{id}/edit")
-    public String showEditForm( @PathVariable Long id, Model model ) {
-        model.addAttribute("recipe", recipeService.getById(id));
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Recipe recipe = recipeService.getById(id);
+        RecipeFormDto form = RecipeMapper.toForm(recipe);
+
+        model.addAttribute("form", form);
         model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
         model.addAttribute("dishTypes", dishTypeService.getAll());
-        model.addAttribute("selectedDishTypeIds", recipeDishTypeService.getDishTypeIdsByRecipe(id)
-        );
+        model.addAttribute("ingredientsList", ingredientService.getAllIngredients());
+        model.addAttribute("units", unitService.getAll());
 
-        return "recipe_form";
+        return "recipe-form";
     }
 
     /** * Сохранение рецепта */
     @PostMapping
-    public String saveRecipe(@ModelAttribute Recipe recipe, @RequestParam(required = false)List<Long> dishTypeIds, @AuthenticationPrincipal User currentUser) {
-        recipeService.save(recipe, dishTypeIds, currentUser);
+    public String saveRecipe(
+            @ModelAttribute RecipeFormDto form,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        recipeService.save(form, currentUser);
         return "redirect:/recipes";
     }
 
