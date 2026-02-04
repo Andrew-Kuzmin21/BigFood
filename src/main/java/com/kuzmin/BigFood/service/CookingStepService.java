@@ -16,6 +16,6 @@ public class CookingStepService {
     }
 
     public List<CookingStep> getCookingStepsByRecipeId(Long recipeId) {
-        return cookingStepRepository.findByRecipeIdOrderByCookingStepNumber(recipeId);
+        return cookingStepRepository.findByRecipeIdOrderByNumber(recipeId);
     }
 }

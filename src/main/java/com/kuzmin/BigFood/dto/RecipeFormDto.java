@@ -17,6 +17,6 @@ public class RecipeFormDto {
 
     private List<Long> dishTypeIds;
     private List<RecipeIngredientDto> ingredients = new ArrayList<>();
+    private List<CookingStepDto> cookingSteps = new ArrayList<>();
+
 }
-
-

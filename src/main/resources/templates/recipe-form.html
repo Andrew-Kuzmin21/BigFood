@@ -101,7 +101,6 @@
     </tbody>
   </table>
   <button type="button" onclick="addRow()">Добавить ингредиент</button>
-
 <!--  Добавление новой строки ингредиента-->
   <script th:inline="javascript">
     /*<![CDATA[*/
@@ -158,6 +157,89 @@
     }
     /*]]>*/
   </script>
+
+
+  <label>Шаги приготовления:</label>
+  <table class="main__cookingSteps">
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>Заголовок</th>
+      <th>Описание</th>
+      <th></th>
+    </tr>
+    </thead>
+
+    <tbody id="steps-body">
+    <tr th:each="step, i : *{cookingSteps}">
+<!--      <td th:text="${i.index + 1}"></td>-->
+      <td th:text="${i.count}"></td>
+
+
+      <td>
+        <input type="text"
+               th:field="*{cookingSteps[__${i.index}__].title}">
+      </td>
+
+      <td>
+      <textarea rows="3"
+                th:field="*{cookingSteps[__${i.index}__].description}"
+                required></textarea>
+      </td>
+
+      <td>
+        <button type="button" onclick="removeStep(this)">✖</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <button type="button" onclick="addStep()">Добавить шаг</button>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    let stepIndex = [[${form.cookingSteps.size()}]];
+
+    const MAX_STEPS = 50;
+
+    function addStep() {
+      const tbody = document.getElementById("steps-body");
+
+      if (tbody.children.length >= MAX_STEPS) {
+        alert("Максимум 50 шагов приготовления");
+        return;
+      }
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+      <td>${stepIndex + 1}</td>
+      <td>
+        <input type="text" name="cookingSteps[${stepIndex}].title">
+      </td>
+      <td>
+        <textarea rows="3"
+                  name="cookingSteps[${stepIndex}].description"
+                  required></textarea>
+      </td>
+      <td>
+        <button type="button" onclick="removeStep(this)">✖</button>
+      </td>
+    `;
+
+      tbody.appendChild(row);
+      stepIndex++;
+    }
+    function renumberSteps() {
+      document.querySelectorAll("#steps-body tr").forEach((row, index) => {
+        row.children[0].innerText = index + 1;
+      });
+    }
+
+    function removeStep(btn) {
+      btn.closest("tr").remove();
+      renumberSteps();
+    }
+    /*]]>*/
+  </script>
+
 
   <button type="submit">Сохранить</button>
 </form>

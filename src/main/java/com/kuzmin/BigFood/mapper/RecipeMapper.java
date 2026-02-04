@@ -2,9 +2,12 @@ package com.kuzmin.BigFood.mapper;
 
 import com.kuzmin.BigFood.dto.RecipeFormDto;
 import com.kuzmin.BigFood.dto.RecipeIngredientDto;
+import com.kuzmin.BigFood.dto.CookingStepDto;
+import com.kuzmin.BigFood.model.CookingStep;
 import com.kuzmin.BigFood.model.Recipe;
 import com.kuzmin.BigFood.model.RecipeIngredients;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,20 @@ public class RecipeMapper {
 
             form.setIngredients(ingredients);
         }
+
+        // Cooking Steps
+        form.setCookingSteps(
+                recipe.getCookingSteps().stream()
+                        .sorted(Comparator.comparing(CookingStep::getNumber))
+                        .map(cs -> {
+                            CookingStepDto dto = new CookingStepDto();
+                            dto.setId(cs.getId());
+                            dto.setTitle(cs.getTitle());
+                            dto.setDescription(cs.getDescription());
+                            return dto;
+                        })
+                        .toList()
+        );
 
         return form;
     }

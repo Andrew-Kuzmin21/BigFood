@@ -19,12 +19,15 @@ public class CookingStep {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cooking_step_id_seq")
     private Long id;
 
+    @Column(name = "cooking_step_title", length = 100)
+    private String title;
+
     @Min(1)
     @Column(name = "cooking_step_number", nullable = false)
-    private int cookingStepNumber;
+    private int number;
 
     @Column(name = "cooking_step_description", nullable = false, length = 500)
-    private String cookingStepDescription;
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "recipe_id", nullable = false)

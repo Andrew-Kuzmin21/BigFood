@@ -1,5 +1,6 @@
 package com.kuzmin.BigFood.service;
 
+import com.kuzmin.BigFood.dto.CookingStepDto;
 import com.kuzmin.BigFood.dto.RecipeFormDto;
 import com.kuzmin.BigFood.dto.RecipeIngredientDto;
 import com.kuzmin.BigFood.model.*;
@@ -7,7 +8,6 @@ import com.kuzmin.BigFood.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ public class RecipeService {
     private final UnitRepository unitRepository;
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
+    private final CookingStepRepository cookingStepRepository;
 
     public RecipeService(
             RecipeRepository recipeRepository,
@@ -32,7 +33,7 @@ public class RecipeService {
             NationalCuisineRepository nationalCuisineRepository,
             UnitRepository unitRepository,
             IngredientRepository ingredientRepository,
-            RecipeIngredientRepository recipeIngredientRepository) {
+            RecipeIngredientRepository recipeIngredientRepository, CookingStepRepository cookingStepRepository) {
         this.recipeRepository = recipeRepository;
         this.recipeDishTypeRepository = recipeDishTypeRepository;
         this.dishTypeRepository = dishTypeRepository;
@@ -40,6 +41,7 @@ public class RecipeService {
         this.unitRepository = unitRepository;
         this.ingredientRepository = ingredientRepository;
         this.recipeIngredientRepository = recipeIngredientRepository;
+        this.cookingStepRepository = cookingStepRepository;
     }
 
     /** * Получение рецептов с пагинацией */
@@ -79,36 +81,63 @@ public class RecipeService {
             );
         }
 
-        Recipe savedRecipe = recipeRepository.save(recipe);
+        recipeRepository.save(recipe);
 
         // ===== 2. Dish types =====
-        recipeDishTypeRepository.deleteByRecipe(savedRecipe);
+        recipeDishTypeRepository.deleteByRecipe(recipe);
 
         if (form.getDishTypeIds() != null) {
             for (Long id : form.getDishTypeIds()) {
                 recipeDishTypeRepository.save(
                         new RecipeDishType()
-                                .setRecipe(savedRecipe)
+                                .setRecipe(recipe)
                                 .setDishType(dishTypeRepository.getReferenceById(id))
                 );
             }
         }
 
         // ===== 3. Ingredients =====
-        recipeIngredientRepository.deleteByRecipe(savedRecipe);
-        savedRecipe.getIngredients().clear();
+        recipeIngredientRepository.deleteByRecipe(recipe);
+        recipe.getIngredients().clear();
 
         if (form.getIngredients() != null) {
             for (RecipeIngredientDto dto : form.getIngredients()) {
                 if (dto.getIngredientId() == null) continue;
 
                 RecipeIngredients ri = new RecipeIngredients()
-                        .setRecipe(savedRecipe)
+                        .setRecipe(recipe)
                         .setIngredient(ingredientRepository.getReferenceById(dto.getIngredientId()))
                         .setUnit(unitRepository.getReferenceById(dto.getUnitId()))
                         .setAmount(dto.getAmount());
 
                 recipeIngredientRepository.save(ri);
+            }
+        }
+
+        // ===== 4. Cooking steps =====
+        cookingStepRepository.deleteByRecipe(recipe);
+        cookingStepRepository.flush();
+
+        List<CookingStepDto> dtos = form.getCookingSteps();
+
+        if (dtos != null) {
+            int stepNumber = 1;
+            for (CookingStepDto dto : dtos) {
+                if (dto.getDescription() == null || dto.getDescription().isBlank()) {
+                    continue;
+                }
+
+                CookingStep step = new CookingStep();
+                step.setRecipe(recipe);
+                step.setNumber(stepNumber++);
+                step.setTitle(dto.getTitle());
+                step.setDescription(dto.getDescription());
+
+                if (dtos.size() > 50) {
+                    throw new IllegalArgumentException("Максимальное количество шагов — 50");
+                }
+
+                cookingStepRepository.save(step);
             }
         }
     }

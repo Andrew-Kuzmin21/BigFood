@@ -1,4 +1,5 @@
 package com.kuzmin.BigFood.controller;
+import com.kuzmin.BigFood.dto.CookingStepDto;
 import com.kuzmin.BigFood.dto.RecipeFormDto;
 import com.kuzmin.BigFood.dto.RecipeIngredientDto;
 import com.kuzmin.BigFood.mapper.RecipeMapper;
@@ -75,6 +76,12 @@ public class RecipeController {
             form.getIngredients().add(new RecipeIngredientDto());
         }
 
+        // 3 пустые строки шагов приготовления по умолчанию
+        form.setCookingSteps(new ArrayList<>());
+        for (int i = 1; i <= 3; i++) {
+            form.getCookingSteps().add(new CookingStepDto());
+        }
+
         model.addAttribute("form", form);
         model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
         model.addAttribute("dishTypes", dishTypeService.getAll());
@@ -89,6 +96,7 @@ public class RecipeController {
     public String showEditForm(@PathVariable Long id, Model model) {
         Recipe recipe = recipeService.getById(id);
         RecipeFormDto form = RecipeMapper.toForm(recipe);
+
 
         model.addAttribute("form", form);
         model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
