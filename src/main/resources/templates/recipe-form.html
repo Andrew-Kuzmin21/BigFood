@@ -71,7 +71,7 @@
     <tbody id="ingredients-body">
     <tr th:each="ing, i : *{ingredients}">
       <td>
-        <select th:field="*{ingredients[__${i.index}__].ingredientId}">
+        <select th:field="*{ingredients[__${i.index}__].ingredientId}" required>
           <option value="">--</option>
           <option th:each="ingr : ${ingredientsList}"
                   th:value="${ingr.id}"
@@ -81,12 +81,12 @@
       </td>
 
       <td>
-        <input type="number" step="0.01"
+        <input type="number" step="0.01" required
                th:field="*{ingredients[__${i.index}__].amount}">
       </td>
 
       <td>
-        <select th:field="*{ingredients[__${i.index}__].unitId}">
+        <select th:field="*{ingredients[__${i.index}__].unitId}" required>
           <option th:each="u : ${units}"
                   th:value="${u.id}"
                   th:text="${u.name}">

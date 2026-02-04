@@ -18,6 +18,8 @@ public class RecipeFormDto {
     private Long nationalCuisineId;
 
     private List<Long> dishTypeIds;
+
+    @Valid
     private List<RecipeIngredientDto> ingredients = new ArrayList<>();
 
     @Valid
