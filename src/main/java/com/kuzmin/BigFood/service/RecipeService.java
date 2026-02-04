@@ -59,6 +59,15 @@ public class RecipeService {
     @Transactional
     public void save(RecipeFormDto form, User currentUser) {
 
+        // очистка пустых шагов
+        if (form.getCookingSteps() != null) {
+            form.setCookingSteps(
+                    form.getCookingSteps().stream()
+                            .filter(s -> s.getDescription() != null && !s.getDescription().isBlank())
+                            .toList()
+            );
+        }
+
         // ===== 1. Recipe (create / update) =====
         Recipe recipe;
 
@@ -120,6 +129,10 @@ public class RecipeService {
 
         List<CookingStepDto> dtos = form.getCookingSteps();
 
+        if (dtos != null && dtos.size() > 50) {
+            throw new IllegalArgumentException("Максимальное количество шагов — 50");
+        }
+
         if (dtos != null) {
             int stepNumber = 1;
             for (CookingStepDto dto : dtos) {
@@ -132,10 +145,6 @@ public class RecipeService {
                 step.setNumber(stepNumber++);
                 step.setTitle(dto.getTitle());
                 step.setDescription(dto.getDescription());
-
-                if (dtos.size() > 50) {
-                    throw new IllegalArgumentException("Максимальное количество шагов — 50");
-                }
 
                 cookingStepRepository.save(step);
             }

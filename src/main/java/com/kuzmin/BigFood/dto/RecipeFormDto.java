@@ -1,5 +1,7 @@
 package com.kuzmin.BigFood.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -17,6 +19,9 @@ public class RecipeFormDto {
 
     private List<Long> dishTypeIds;
     private List<RecipeIngredientDto> ingredients = new ArrayList<>();
+
+    @Valid
+    @Size(max = 50, message = "Не более 50 шагов приготовления")
     private List<CookingStepDto> cookingSteps = new ArrayList<>();
 
 }

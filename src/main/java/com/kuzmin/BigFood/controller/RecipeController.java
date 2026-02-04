@@ -6,12 +6,14 @@ import com.kuzmin.BigFood.mapper.RecipeMapper;
 import com.kuzmin.BigFood.model.Recipe;
 import com.kuzmin.BigFood.model.User;
 import com.kuzmin.BigFood.service.*;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -110,12 +112,23 @@ public class RecipeController {
     /** * Сохранение рецепта */
     @PostMapping
     public String saveRecipe(
-            @ModelAttribute RecipeFormDto form,
-            @AuthenticationPrincipal User currentUser
+            @Valid @ModelAttribute("form") RecipeFormDto form,
+            BindingResult result,
+            @AuthenticationPrincipal User currentUser,
+            Model model
     ) {
+        if (result.hasErrors()) {
+            model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
+            model.addAttribute("dishTypes", dishTypeService.getAll());
+            model.addAttribute("ingredientsList", ingredientService.getAllIngredients());
+            model.addAttribute("units", unitService.getAll());
+            return "recipe-form";
+        }
+
         recipeService.save(form, currentUser);
         return "redirect:/recipes";
     }
+
 
     /** * Удаление рецепта */
     @PostMapping("/{id}/delete")
