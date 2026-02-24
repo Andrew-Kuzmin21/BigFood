@@ -18,4 +18,10 @@ public interface MediaRepository extends PagingAndSortingRepository<Media, Long>
 
     List<Media> findByCookingStepIdOrderById(Long cookingStepId);
 
+    void deleteByRecipeId(Long id);
+
+    void deleteByRecipeIdAndCookingStepIsNull(Long id);
+
+    void deleteByCookingStepId(Long id);
+
 }

@@ -3,6 +3,7 @@ package com.kuzmin.BigFood.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,5 +26,19 @@ public class RecipeFormDto {
     @Valid
     @Size(max = 50, message = "Не более 50 шагов приготовления")
     private List<CookingStepDto> cookingSteps = new ArrayList<>();
+
+//    private List<Media> existingMedia;
+    private List<MultipartFile> media;
+    private Integer mainMediaIndex;
+
+    private List<MediaDto> existingMedia;
+
+    public void setExistingMedia(List<MediaDto> existingMedia) {
+        this.existingMedia = existingMedia;
+    }
+
+    public List<MediaDto> getExistingMedia() {
+        return existingMedia;
+    }
 
 }

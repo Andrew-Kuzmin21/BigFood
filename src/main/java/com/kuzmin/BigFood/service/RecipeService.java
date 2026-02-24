@@ -9,10 +9,13 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class RecipeService {
@@ -24,7 +27,8 @@ public class RecipeService {
     private final UnitRepository unitRepository;
     private final IngredientRepository ingredientRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
-    private final CookingStepRepository cookingStepRepository;
+    private final MediaRepository mediaRepository;
+    private final MediaService mediaService;
 
     public RecipeService(
             RecipeRepository recipeRepository,
@@ -33,7 +37,9 @@ public class RecipeService {
             NationalCuisineRepository nationalCuisineRepository,
             UnitRepository unitRepository,
             IngredientRepository ingredientRepository,
-            RecipeIngredientRepository recipeIngredientRepository, CookingStepRepository cookingStepRepository) {
+            RecipeIngredientRepository recipeIngredientRepository,
+            MediaRepository mediaRepository,
+            MediaService mediaService) {
         this.recipeRepository = recipeRepository;
         this.recipeDishTypeRepository = recipeDishTypeRepository;
         this.dishTypeRepository = dishTypeRepository;
@@ -41,7 +47,8 @@ public class RecipeService {
         this.unitRepository = unitRepository;
         this.ingredientRepository = ingredientRepository;
         this.recipeIngredientRepository = recipeIngredientRepository;
-        this.cookingStepRepository = cookingStepRepository;
+        this.mediaRepository = mediaRepository;
+        this.mediaService = mediaService;
     }
 
     /** * Получение рецептов с пагинацией */
@@ -57,9 +64,9 @@ public class RecipeService {
 
     /** * Сохранить рецепт (create / update) */
     @Transactional
-    public void save(RecipeFormDto form, User currentUser) {
+    public void save(RecipeFormDto form, List<MultipartFile> stepFiles, List<Integer> stepFileIndexes, List<Long> deleteMediaIds, User currentUser) {
 
-        // очистка пустых шагов
+        // ===== 0. Очистка пустых шагов =====
         if (form.getCookingSteps() != null) {
             form.setCookingSteps(
                     form.getCookingSteps().stream()
@@ -69,15 +76,10 @@ public class RecipeService {
         }
 
         // ===== 1. Recipe (create / update) =====
-        Recipe recipe;
-
-        if (form.getId() == null) {
-            recipe = new Recipe();
-            recipe.setAuthor(currentUser);
-        } else {
-            recipe = recipeRepository.findById(form.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Recipe not found"));
-        }
+        Recipe recipe = (form.getId() == null)
+                ? new Recipe().setAuthor(currentUser)
+                : recipeRepository.findById(form.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Recipe not found"));
 
         recipe.setName(form.getName());
         recipe.setDescription(form.getDescription());
@@ -92,7 +94,20 @@ public class RecipeService {
 
         recipeRepository.save(recipe);
 
-        // ===== 2. Dish types =====
+        // ===== 2. МЕДИА РЕЦЕПТА =====
+        //mediaRepository.deleteByRecipeIdAndCookingStepIsNull(recipe.getId());
+        if (deleteMediaIds != null && !deleteMediaIds.isEmpty()) {
+            mediaRepository.deleteAllById(deleteMediaIds);
+        }
+
+
+        mediaService.saveRecipeMedia(
+                recipe,
+                form.getMedia(),
+                form.getMainMediaIndex()
+        );
+
+        // ===== 3. Dish types =====
         recipeDishTypeRepository.deleteByRecipe(recipe);
 
         if (form.getDishTypeIds() != null) {
@@ -105,7 +120,7 @@ public class RecipeService {
             }
         }
 
-        // ===== 3. Ingredients =====
+        // ===== 4. Ingredients =====
         recipeIngredientRepository.deleteByRecipe(recipe);
         recipe.getIngredients().clear();
 
@@ -123,34 +138,59 @@ public class RecipeService {
             }
         }
 
-        // ===== 4. Cooking steps =====
-        cookingStepRepository.deleteByRecipe(recipe);
-        cookingStepRepository.flush();
+        // ===== 5. Cooking steps + их медиа =====
+        Map<Long, CookingStep> existingMap = recipe.getCookingSteps()
+                .stream()
+                .collect(Collectors.toMap(CookingStep::getId, s -> s));
 
-        List<CookingStepDto> dtos = form.getCookingSteps();
+        List<CookingStep> updatedSteps = new ArrayList<>();
+        int number = 1;
 
-        if (dtos != null && dtos.size() > 50) {
-            throw new IllegalArgumentException("Максимальное количество шагов — 50");
+        for (CookingStepDto dto : form.getCookingSteps()) {
+
+            CookingStep step;
+
+            if (dto.getId() != null && existingMap.containsKey(dto.getId())) {
+                step = existingMap.get(dto.getId());
+            } else {
+                step = new CookingStep();
+                step.setRecipe(recipe);
+            }
+
+            step.setNumber(number++);
+            step.setTitle(dto.getTitle());
+            step.setDescription(dto.getDescription());
+
+            updatedSteps.add(step);
         }
 
-        if (dtos != null) {
-            int stepNumber = 1;
-            for (CookingStepDto dto : dtos) {
-                if (dto.getDescription() == null || dto.getDescription().isBlank()) {
-                    continue;
+        recipe.getCookingSteps().clear();
+        recipe.getCookingSteps().addAll(updatedSteps);
+        for (CookingStepDto dto : form.getCookingSteps()) {
+            System.out.println("DTO ID = " + dto.getId());
+        }
+//        cookingStepRepository.saveAll(updatedSteps);
+
+        // ===== 4. Сохранение файлов шагов =====
+        if (stepFiles != null && stepFileIndexes != null) {
+
+            for (int i = 0; i < stepFiles.size(); i++) {
+
+                MultipartFile file = stepFiles.get(i);
+
+                if (file.isEmpty()) continue;
+
+                int stepIndex = stepFileIndexes.get(i);
+
+                if (stepIndex < updatedSteps.size()) {
+
+                    CookingStep step = updatedSteps.get(stepIndex);
+
+                    mediaService.saveStepMedia(step, List.of(file));
                 }
-
-                CookingStep step = new CookingStep();
-                step.setRecipe(recipe);
-                step.setNumber(stepNumber++);
-                step.setTitle(dto.getTitle());
-                step.setDescription(dto.getDescription());
-
-                cookingStepRepository.save(step);
             }
         }
     }
-
     public List<Long> getDishTypeIdsByRecipe(Long recipeId) {
         return recipeDishTypeRepository.findByRecipeId(recipeId)
                 .stream()
@@ -197,4 +237,10 @@ public class RecipeService {
     public List<Recipe> findByAuthorId(Long authorId) {
         return recipeRepository.findByAuthorId(authorId);
     }
+
+    public Recipe findByIdWithStepsAndMedia(Long id) {
+        return recipeRepository.findByIdWithStepsAndMedia(id)
+                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+    }
+
 }

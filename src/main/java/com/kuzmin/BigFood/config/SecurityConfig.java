@@ -38,19 +38,17 @@ public class SecurityConfig {
                                 "/recipe_form",
                                 "/recipes/new",
                                 "/recipes/edit",
+                                "/recipes/save",
                                 "/recipes/{id}/edit",
                                 "/recipes/delete",
                                 "/recipes/{id}/delete",
                                 "/dish-types/**",
                                 "/api/dish-types/**"
                         )
-                        .hasAnyAuthority("ROLE_Admin", "ROLE_User")
+                        .authenticated()
 
                         .requestMatchers("/breakage-types/**", "/repair-orders/**")
-                        .hasAnyAuthority( "ROLE_Customer", "ROLE_Mechanic","ROLE_Admin", "ROLE_PartsManager")
-
-                        .requestMatchers("/repair-orders", "/part_order")
-                        .hasAnyAuthority( "ROLE_Mechanic")
+                        .hasAnyAuthority("ROLE_Admin", "ROLE_User")
                 )
                 .formLogin(form -> form
                         .loginPage("/login")

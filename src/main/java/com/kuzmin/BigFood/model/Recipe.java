@@ -1,24 +1,31 @@
 package com.kuzmin.BigFood.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
-@Data
 @Entity(name = "recipes")
 @Table(name = "recipes")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Recipe {
 
     @Id
     @SequenceGenerator(name = "recipe_id_seq", sequenceName = "recipe_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recipe_id_seq")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "recipe_name", length = 100, nullable = false)
@@ -55,9 +62,10 @@ public class Recipe {
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecipeIngredients> ingredients = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("number ASC")
-    private List<CookingStep> cookingSteps = new ArrayList<>();
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CookingStep> cookingSteps = new LinkedHashSet<>();
 
-
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Media> media = new ArrayList<>();
 }

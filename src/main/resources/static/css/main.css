@@ -1,0 +1,24 @@
+.media-preview {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.media-item {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.media-item.main {
+    border-color: gold;
+}
+
+.media-item img,
+.media-item video {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    pointer-events: none;
+}
+

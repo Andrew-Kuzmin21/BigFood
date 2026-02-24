@@ -1,21 +1,27 @@
 package com.kuzmin.BigFood.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
 @Data
 @Entity(name = "media")
 @Table(name = "media")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Media {
 
     @Id
     @SequenceGenerator(name = "media_id_seq", sequenceName = "media_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "media_id_seq")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "media_url", nullable = false, length = 500)

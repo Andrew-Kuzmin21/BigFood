@@ -15,8 +15,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /** * Контроллер для работы с рецептами. */
 @Controller
@@ -58,7 +60,7 @@ public class RecipeController {
             model.addAttribute("showAnonymousButton", true);
         }
 
-        Page<Recipe> recipePage = recipeService.getPage(page, 10);
+        Page<Recipe> recipePage = recipeService.getPage(page, 20);
         model.addAttribute("recipePage", recipePage);
         model.addAttribute("currentPage", page);
         model.addAttribute("recipeService", recipeService);
@@ -96,7 +98,8 @@ public class RecipeController {
     /** * Форма редактирования рецепта */
     @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable Long id, Model model) {
-        Recipe recipe = recipeService.getById(id);
+//        Recipe recipe = recipeService.getById(id);
+        Recipe recipe = recipeService.findByIdWithStepsAndMedia(id);
         RecipeFormDto form = RecipeMapper.toForm(recipe);
 
 
@@ -110,13 +113,20 @@ public class RecipeController {
     }
 
     /** * Сохранение рецепта */
-    @PostMapping
+    @PostMapping("/save")
     public String saveRecipe(
             @Valid @ModelAttribute("form") RecipeFormDto form,
             BindingResult result,
+            @RequestParam(required = false) List<MultipartFile> stepFiles,
+            @RequestParam(required = false) List<Integer> stepFileIndexes,
+            @RequestParam(required = false) List<Long> deleteMediaIds,
             @AuthenticationPrincipal User currentUser,
             Model model
     ) {
+        if (form.getMedia() != null && form.getMedia().size() > 10) {
+            throw new IllegalArgumentException("Слишком много файлов");
+        }
+        System.out.println(">>> SAVE RECIPE HIT: files = " + (form.getMedia() == null ? "null" : form.getMedia().size()));
         if (result.hasErrors()) {
             model.addAttribute("nationalCuisines", nationalCuisineService.getAll());
             model.addAttribute("dishTypes", dishTypeService.getAll());
@@ -125,7 +135,7 @@ public class RecipeController {
             return "recipe-form";
         }
 
-        recipeService.save(form, currentUser);
+        recipeService.save(form, stepFiles, stepFileIndexes, deleteMediaIds, currentUser);
         return "redirect:/recipes";
     }
 

@@ -3,6 +3,7 @@ package com.kuzmin.BigFood.mapper;
 import com.kuzmin.BigFood.dto.RecipeFormDto;
 import com.kuzmin.BigFood.dto.RecipeIngredientDto;
 import com.kuzmin.BigFood.dto.CookingStepDto;
+import com.kuzmin.BigFood.dto.MediaDto;
 import com.kuzmin.BigFood.model.CookingStep;
 import com.kuzmin.BigFood.model.Recipe;
 import com.kuzmin.BigFood.model.RecipeIngredients;
@@ -22,6 +23,20 @@ public class RecipeMapper {
         form.setDescription(recipe.getDescription());
         form.setCookingTime(recipe.getCookingTime());
         form.setServing(recipe.getServing());
+
+        form.setExistingMedia(
+                recipe.getMedia().stream()
+                        .filter(m -> m.getCookingStep() == null)
+                        .map(m -> {
+                            MediaDto dto = new MediaDto();
+                            dto.setId(m.getId());
+                            dto.setUrl(m.getUrl());
+                            dto.setMain(m.isMain());
+                            return dto;
+                        })
+                        .toList()
+        );
+
 
         if (recipe.getNationalCuisine() != null) {
             form.setNationalCuisineId(recipe.getNationalCuisine().getId());
@@ -55,6 +70,18 @@ public class RecipeMapper {
                             dto.setId(cs.getId());
                             dto.setTitle(cs.getTitle());
                             dto.setDescription(cs.getDescription());
+
+                            dto.setExistingMedia(
+                                    cs.getMedia().stream()
+                                            .map(m -> {
+                                                MediaDto md = new MediaDto();
+                                                md.setId(m.getId());
+                                                md.setUrl(m.getUrl());
+                                                return md;
+                                            })
+                                            .toList()
+                            );
+
                             return dto;
                         })
                         .toList()

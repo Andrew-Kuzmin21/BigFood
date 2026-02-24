@@ -8,7 +8,7 @@
 <body>
 <h1 th:text="${form.id} == null ? 'Создать рецепт' : 'Редактировать рецепт'"></h1>
 
-<form th:action="@{/recipes}" th:object="${form}" method="post">
+<form th:action="@{/recipes/save}" th:object="${form}" method="post" enctype="multipart/form-data">
   <input type="hidden" th:if="${form.id != null}" th:field="*{id}" />
 
   <label for="title">Название:</label>
@@ -18,6 +18,89 @@
   <label for="description">Описание:</label>
   <textarea id="description" th:field="*{description}" rows="5"></textarea>
   <br/>
+
+  <label>Фото / видео рецепта:</label>
+  <input type="file" id="mediaInput" name="media" multiple accept="image/*,video/*">
+  <label>Главное фото:</label>
+  <input type="hidden" name="mainMediaIndex" id="mainMediaIndex">
+
+  <div id="mediaPreview" class="media-preview"></div>
+
+  <div class="existing-media">
+    <div th:each="media : ${form.existingMedia}">
+      <img th:src="@{${media.url}}"
+           th:class="'media-item ' + (${media.main} ? 'main' : '')">
+    </div>
+  </div>
+
+  <div th:each="media : ${form.existingMedia}">
+    <img th:src="@{${media.url}}" width="100">
+    <label>
+      Удалить
+      <input type="checkbox"
+             name="deleteMediaIds"
+             th:value="${media.id}">
+    </label>
+  </div>
+
+  <script>
+    const input = document.getElementById('mediaInput');
+    const preview = document.getElementById('mediaPreview');
+    const mainIndexInput = document.getElementById('mainMediaIndex');
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const MAX_FILES = 10;
+
+    input.addEventListener('change', () => {
+      if (input.files.length > MAX_FILES) {
+        alert(`Можно выбрать не более ${MAX_FILES} файлов`);
+        input.value = '';
+        return;
+      }
+
+      preview.innerHTML = '';
+      mainIndexInput.value = '';
+
+      Array.from(input.files).forEach((file, index) => {
+
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`Файл "${file.name}" слишком большой`);
+          return;
+        }
+
+        let element;
+        if (file.type.startsWith('video')) {
+          element = document.createElement('video');
+          element.src = URL.createObjectURL(file);
+          element.muted = true;
+          element.loop = true;
+          element.playsInline = true;
+        } else {
+          element = document.createElement('img');
+          element.src = URL.createObjectURL(file);
+        }
+
+        const wrapper = document.createElement('button');
+        wrapper.type = 'button';
+        wrapper.classList.add('media-item');
+
+        wrapper.appendChild(element);
+
+        wrapper.addEventListener('click', (e) => {
+          e.preventDefault();
+
+          document.querySelectorAll('#mediaPreview .media-item')
+                  .forEach(el => el.classList.remove('main'));
+
+          wrapper.classList.add('main');
+          mainIndexInput.value = index;
+        });
+
+        preview.appendChild(wrapper);
+      });
+    });
+  </script>
+
 
   <label for="cookingTime">Cooking Time:</label>
   <input type="number" id="cookingTime" th:field="*{cookingTime}"  />
@@ -166,15 +249,18 @@
       <th>#</th>
       <th>Заголовок</th>
       <th>Описание</th>
+      <th>Фото/Видео</th>
       <th></th>
     </tr>
     </thead>
 
     <tbody id="steps-body">
     <tr th:each="step, i : *{cookingSteps}">
-<!--      <td th:text="${i.index + 1}"></td>-->
-      <td th:text="${i.count}"></td>
 
+      <input type="hidden"
+             th:field="*{cookingSteps[__${i.index}__].id}" />
+
+      <td th:text="${i.count}"></td>
 
       <td>
         <input type="text"
@@ -182,15 +268,38 @@
       </td>
 
       <td>
-      <textarea rows="3"
-                th:field="*{cookingSteps[__${i.index}__].description}"
-                required></textarea>
+    <textarea rows="3"
+              th:field="*{cookingSteps[__${i.index}__].description}"
+              required></textarea>
+      </td>
+
+      <td>
+        <!-- существующие медиа -->
+        <div th:each="media : ${step.existingMedia}">
+          <img th:src="@{${media.url}}" width="100">
+          <label>
+            Удалить
+            <input type="checkbox"
+                   name="deleteMediaIds"
+                   th:value="${media.id}">
+          </label>
+        </div>
+
+        <!-- добавление нового -->
+        <input type="hidden"
+               name="stepFileIndexes"
+               th:value="${i.index}">
+        <input type="file"
+               name="stepFiles"
+               multiple
+               accept="image/*,video/*">
       </td>
 
       <td>
         <button type="button" onclick="removeStep(this)">✖</button>
       </td>
     </tr>
+
     </tbody>
   </table>
   <button type="button" onclick="addStep()">Добавить шаг</button>
@@ -209,24 +318,40 @@
       }
 
       const row = document.createElement("tr");
+
       row.innerHTML = `
-      <td>${stepIndex + 1}</td>
-      <td>
-        <input type="text" name="cookingSteps[${stepIndex}].title">
-      </td>
-      <td>
-        <textarea rows="3"
-                  name="cookingSteps[${stepIndex}].description"
-                  required></textarea>
-      </td>
-      <td>
-        <button type="button" onclick="removeStep(this)">✖</button>
-      </td>
-    `;
+    <td>${stepIndex + 1}</td>
+
+    <td>
+      <input type="text"
+             name="cookingSteps[${stepIndex}].title">
+    </td>
+
+    <td>
+      <textarea rows="3"
+                name="cookingSteps[${stepIndex}].description"
+                required></textarea>
+    </td>
+
+    <td>
+      <input type="hidden"
+             name="stepFileIndexes"
+             value="${stepIndex}">
+      <input type="file"
+             name="stepFiles"
+             multiple
+             accept="image/*,video/*">
+    </td>
+
+    <td>
+      <button type="button" onclick="removeStep(this)">✖</button>
+    </td>
+  `;
 
       tbody.appendChild(row);
       stepIndex++;
     }
+
     function renumberSteps() {
       document.querySelectorAll("#steps-body tr").forEach((row, index) => {
         row.children[0].innerText = index + 1;
@@ -290,4 +415,3 @@
 
 </body>
 </html>
-
